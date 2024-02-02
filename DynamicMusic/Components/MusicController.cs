@@ -11,6 +11,7 @@ namespace DynamicMusic.Components
     {
         public AudioSource? audioPlayer;
         public static List<Music> musicList = [];
+        public static readonly Dictionary<string,Dictionary<MusicType,AudioClip>> musicDict = new();
         public List<Object> assetList = new();
         public void Awake()
         {
@@ -24,6 +25,20 @@ namespace DynamicMusic.Components
             }
             PopulateMusicList();
             WriteMusicList();
+        }
+        public void PopulateMusicDict()
+        {
+            AudioClip? clip;
+            MusicType type = MusicType.Encounter;
+            string name = "";
+            Dictionary<MusicType, AudioClip>? dict;
+            if (MusicPlugin.bundle == null) return;
+            for (int i = 0; i < assetList.Count; i++)
+            {
+                clip = assetList[i] as AudioClip;
+                name = clip.name.ToLower();
+                if (clip == null) continue;
+            }
         }
         public void PopulateMusicList()
         {
