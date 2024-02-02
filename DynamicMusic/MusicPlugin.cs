@@ -5,6 +5,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using DynamicMusic.Components;
+using MonoMod.RuntimeDetour;
 using UnityEngine;
 
 namespace DynamicMusic
@@ -22,7 +23,10 @@ namespace DynamicMusic
         public const string modName = "DynamicMusic";
         public static AssetBundle? bundle;
         public static GameObject? musicController;
+        internal static MusicController? controller;
+        public static AudioSource? musicSource;
         public static ManualLogSource mls;
+        public static Hook? enemyHook;
         public void Awake()
         {
             mls = base.Logger;
@@ -30,8 +34,28 @@ namespace DynamicMusic
 
             bundle = AssetBundle.LoadFromFile(Path.Combine(sAssemblyLocation, "dynamicmusicbundle"));
             musicController = new GameObject(modName);
-            musicController.AddComponent<MusicController>();
-            musicController.AddComponent<AudioSource>();
+            controller = musicController.AddComponent<MusicController>();
+            musicSource = musicController.AddComponent<AudioSource>();
+            enemyHook = new(
+            typeof(SandSpiderAI).GetMethod(nameof(SandSpiderAI.Update), (BindingFlags)int.MaxValue),
+            (Action<SandSpiderAI> original, SandSpiderAI self) =>
+            {
+                if (GameNetworkManager.Instance == null || GameNetworkManager.Instance.localPlayerController == null)
+                {
+                    original(self);
+                    return;
+                }
+                if (GameNetworkManager.Instance.localPlayerController.HasLineOfSightToPosition(self.transform.position))
+                {
+                    if(self.TryGetComponent(out EnemyData data))
+                    {
+                        data.encountered = true;
+                        mls.LogInfo("spotted");
+                        musicSource.clip = MusicController.PickMusicByNameAndType(self.enemyType.enemyName,MusicType.Encounter).Clip;
+                    }
+                }
+                original(self);
+            });
             //On.GameNetcodeStuff.PlayerControllerB.Update += PlayerControllerB_Update;
         }
 
