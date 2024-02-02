@@ -11,7 +11,7 @@ namespace DynamicMusic.Components
     {
         public AudioSource? audioPlayer;
         public static List<Music> musicList = [];
-        public static readonly Dictionary<string,Dictionary<MusicType,AudioClip>> musicDict = new();
+        public static readonly Dictionary<Type,Dictionary<MusicType,AudioClip>> musicDict = new();
         public List<Object> assetList = new();
         public void Awake()
         {
@@ -23,41 +23,53 @@ namespace DynamicMusic.Components
             {
                 assetList = MusicPlugin.bundle.LoadAllAssets().ToList();
             }
-            PopulateMusicList();
-            WriteMusicList();
+            PopulateMusicDict();
+            WriteMusicDict();
         }
         public void PopulateMusicDict()
         {
-            AudioClip? clip;
+            MusicPlugin.mls.LogInfo("populating");
+            AudioClip? clip = null;
             MusicType type = MusicType.Encounter;
-            string name = "";
-            Dictionary<MusicType, AudioClip>? dict;
             if (MusicPlugin.bundle == null) return;
-            for (int i = 0; i < assetList.Count; i++)
+            for (int i = 0; i < MusicPlugin.objects.Count; i++)
             {
+                musicDict.Add(MusicPlugin.objects[i].GetType(), new Dictionary<MusicType, AudioClip>());
+                if (i >= assetList.Count) continue;
+                foreach(var b in assetList)
+                {
+                    if(b.name =)
+                }
+                if (assetList[i].name.ToLower().Contains("enc")) type = MusicType.Encounter;
+                if (assetList[i].name.ToLower().Contains("att")) type = MusicType.Attack;
+                if (assetList[i].name.ToLower().Contains("esc")) type = MusicType.Escape;
+                MusicPlugin.mls.LogInfo(assetList[i].name);
                 clip = assetList[i] as AudioClip;
-                name = clip.name.ToLower();
-                if (clip == null) continue;
+            }
+            for(int j = 0; j < musicDict.Count; j++)
+            {
+
+                if (clip == null)
+                {
+                    continue;
+                }
+                musicDict[MusicPlugin.objects[j]].Add(type, clip);
             }
         }
-        public void PopulateMusicList()
+        public void WriteMusicDict()
         {
-            AudioClip? clip;
-            MusicType type = MusicType.Encounter;
-            string name = "";
-            if (MusicPlugin.bundle == null) return;
-            string[] names = MusicPlugin.bundle.GetAllAssetNames();
-            for (int i = 0; i < names.Count(); i++)
+            MusicPlugin.mls.LogInfo("writing");
+            foreach (var i in musicDict.Keys)
             {
-                clip = assetList[i] as AudioClip;
-                name = clip.name.ToLower();
-                if(clip == null) continue;
-                if (name.Contains("enc")) type = MusicType.Encounter;
-                if (name.Contains("att")) type = MusicType.Attack;
-                if (name.Contains("esc")) type = MusicType.Escape;
-                musicList.Add(new Music(names[i],type,clip));
+                MusicPlugin.mls.LogInfo(i.Name);
+                foreach (var j in musicDict[i].Keys)
+                {
+                    MusicPlugin.mls.LogInfo(j.ToString());
+                    MusicPlugin.mls.LogInfo(musicDict[i][j].name);
+                }
             }
         }
+        
         public static Music PickMusicByType(MusicType type)
         {
             foreach(Music music in musicList)
@@ -86,13 +98,6 @@ namespace DynamicMusic.Components
             }
             MusicPlugin.mls.LogInfo("Failed to find music by name and type! Returning first available music!");
             return musicList[0];
-        }
-        public void WriteMusicList()
-        {
-            foreach(var i in musicList)
-            {
-                MusicPlugin.mls.LogInfo(i.Type.ToString());
-            }
         }
     }
 }
