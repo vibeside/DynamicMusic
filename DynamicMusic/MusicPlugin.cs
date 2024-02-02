@@ -65,18 +65,12 @@ namespace DynamicMusic
                     {
                         data.encountered = true;
                         mls.LogInfo("spotted");
-                        musicSource.clip = MusicController.PickMusicByNameAndType(self.enemyType.enemyName,MusicType.Encounter).Clip;
+                        musicSource.clip = MusicController.PickEventByTypeAndEnemy(self.GetType(), MusicType.Encounter);
+                        musicSource.PlayOneShot(MusicController.PickEventByTypeAndEnemy(self.GetType(), MusicType.Encounter));
                     }
                 }
                 original(self);
             });
-            //On.GameNetcodeStuff.PlayerControllerB.Update += PlayerControllerB_Update;
         }
-
-        //private void PlayerControllerB_Update(On.GameNetcodeStuff.PlayerControllerB.orig_Update orig, GameNetcodeStuff.PlayerControllerB self)
-        //{
-        //    self.sprintMeter = 1f;
-        //    orig(self);
-        //}
     }
 }
