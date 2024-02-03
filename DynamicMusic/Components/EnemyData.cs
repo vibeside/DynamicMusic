@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 namespace DynamicMusic.Components
 {
-    internal class EnemyData
+    internal class EnemyData : MonoBehaviour
     {
-        public bool encountered;
+        public static bool encountered;
     }
 }

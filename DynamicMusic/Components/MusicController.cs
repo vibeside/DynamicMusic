@@ -10,7 +10,6 @@ namespace DynamicMusic.Components
     internal class MusicController : MonoBehaviour
     {
         public AudioSource? audioPlayer;
-        public static List<Music> musicList = [];
         public static readonly Dictionary<Type,Dictionary<MusicType,AudioClip>> musicDict = new();
         public List<Object> assetList = new();
         public void Awake()
@@ -44,7 +43,10 @@ namespace DynamicMusic.Components
                         if (b.name.ToLower().Contains("esc")) type = MusicType.Escape;
                        // MusicPlugin.mls.LogInfo(b.name);
                         clip = b as AudioClip;
-                        musicDict[MusicPlugin.objects[i]].Add(type, clip);
+                        if (clip != null)
+                        {
+                            musicDict[MusicPlugin.objects[i]].Add(type, clip);
+                        }
                         continue;
                     }
                 }
@@ -58,12 +60,13 @@ namespace DynamicMusic.Components
                 MusicPlugin.mls.LogInfo(i.Name);
                 foreach (var j in musicDict[i].Keys)
                 {
-                    //MusicPlugin.mls.LogInfo(j.ToString());
                     MusicPlugin.mls.LogInfo(musicDict[i][j].name);
                 }
+                MusicPlugin.mls.LogInfo("");
+
             }
         }
-        public static AudioClip PickEventByTypeAndEnemy(Type type, MusicType musicType)
+        public static AudioClip PickMusicByEnemyAndType(Type type, MusicType musicType)
         {
             return musicDict[type][musicType];
         }

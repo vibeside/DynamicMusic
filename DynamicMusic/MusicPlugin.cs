@@ -30,6 +30,7 @@ namespace DynamicMusic
         public static AudioSource? musicSource;
         public static ManualLogSource mls;
         public static Hook? enemyHook;
+        public static Hook? enemyStartHook;
         public static List<Type> objects = new();
         public void Awake()
         {
@@ -44,6 +45,11 @@ namespace DynamicMusic
             {
                 objects.Add(type);
             }
+            BepInEx.Bootstrap.Chainloader.Plugins.Do(plugin =>
+            {
+                objects.AddRange(Assembly.GetAssembly(plugin.GetType()).GetTypes().Where(type => type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(EnemyAI))));
+            });
+
 
             musicController = new GameObject(modName);
             musicController.hideFlags = HideFlags.HideAndDontSave;
@@ -61,15 +67,28 @@ namespace DynamicMusic
                 }
                 if (GameNetworkManager.Instance.localPlayerController.HasLineOfSightToPosition(self.transform.position))
                 {
-                    if(self.TryGetComponent(out EnemyData data))
+                    //if (self.TryGetComponent(out EnemyData data))
                     {
-                        data.encountered = true;
-                        mls.LogInfo("spotted");
-                        musicSource.clip = MusicController.PickEventByTypeAndEnemy(self.GetType(), MusicType.Encounter);
-                        musicSource.PlayOneShot(MusicController.PickEventByTypeAndEnemy(self.GetType(), MusicType.Encounter));
+                        if (EnemyData.encountered == false)
+                        {
+                            EnemyData.encountered = true;
+                            musicSource.clip = MusicController.PickMusicByEnemyAndType(self.GetType(), MusicType.Encounter);
+                            musicSource.PlayOneShot(MusicController.PickMusicByEnemyAndType(self.GetType(), MusicType.Encounter));
+                        }
                     }
                 }
+                if((self.movingTowardsTargetPlayer || self.moveTowardsDestination) && self.targetPlayer == GameNetworkManager.Instance.localPlayerController)
+                {
+                    mls.LogInfo("YOUR THE TARGET");
+                }
                 original(self);
+            });
+            enemyHook = new(
+            typeof(SandSpiderAI).GetMethod(nameof(SandSpiderAI.Start), (BindingFlags)int.MaxValue),
+            (Action<SandSpiderAI> original, SandSpiderAI self) =>
+            {
+                original(self);
+                self.gameObject.AddComponent<EnemyData>();
             });
         }
     }
